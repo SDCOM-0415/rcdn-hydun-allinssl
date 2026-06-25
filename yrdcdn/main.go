@@ -13,42 +13,78 @@ type Request struct {
 }
 
 type Response struct {
-	Status  string                 `json:"status"`
-	Message string                 `json:"message"`
-	Result  map[string]interface{} `json:"result,omitempty"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Result  interface{} `json:"result,omitempty"`
 }
 
-type ActionInfo struct {
+type ActionParam struct {
+	Key   string `json:"-"`
+	Label string `json:"-"`
+}
+
+type actionJSON struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
-	Params      map[string]interface{} `json:"params,omitempty"`
+	Params      orderedParams          `json:"params,omitempty"`
 }
 
-var pluginMeta = map[string]interface{}{
-	"name":        "yrdcdn",
-	"description": "融毅盾SSL证书部署插件",
-	"version":     "1.0.0",
-	"author":      "allinssl",
-	"config": map[string]interface{}{
-		"username": "登录邮箱/手机",
-		"password": "密码",
+type orderedParams []ActionParam
+
+func (op orderedParams) MarshalJSON() ([]byte, error) {
+	if len(op) == 0 {
+		return []byte("{}"), nil
+	}
+	var buf []byte
+	buf = append(buf, '{')
+	for i, p := range op {
+		if i > 0 {
+			buf = append(buf, ',')
+		}
+		key, _ := json.Marshal(p.Key)
+		val, _ := json.Marshal(p.Label)
+		buf = append(buf, key...)
+		buf = append(buf, ':')
+		buf = append(buf, val...)
+	}
+	buf = append(buf, '}')
+	return buf, nil
+}
+
+type pluginMetaJSON struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Version     string         `json:"version"`
+	Author      string         `json:"author"`
+	Config      orderedParams  `json:"config"`
+	Actions     []actionJSON   `json:"actions"`
+}
+
+var pluginMeta = pluginMetaJSON{
+	Name:        "yrdcdn",
+	Description: "融毅盾SSL证书部署插件",
+	Version:     "1.0.0",
+	Author:      "allinssl",
+	Config: orderedParams{
+		{Key: "username", Label: "登录邮箱/手机"},
+		{Key: "password", Label: "密码"},
 	},
-	"actions": []ActionInfo{
+	Actions: []actionJSON{
 		{
 			Name:        "check",
 			Description: "验证账号配置是否正确",
-			Params: map[string]interface{}{
-				"username": "登录邮箱/手机",
-				"password": "密码",
+			Params: orderedParams{
+				{Key: "username", Label: "登录邮箱/手机"},
+				{Key: "password", Label: "密码"},
 			},
 		},
 		{
 			Name:        "deploy",
 			Description: "部署SSL证书到融毅盾",
-			Params: map[string]interface{}{
-				"id":         "域名ID",
-				"fullchain":  "完整证书链",
-				"privatekey": "私钥",
+			Params: orderedParams{
+				{Key: "id", Label: "域名ID"},
+				{Key: "fullchain", Label: "完整证书链"},
+				{Key: "privatekey", Label: "私钥"},
 			},
 		},
 	},
@@ -105,14 +141,9 @@ func getMetadata() *Response {
 }
 
 func listActions() *Response {
-	actions := pluginMeta["actions"].([]ActionInfo)
-	actionList := make([]map[string]interface{}, 0, len(actions))
-	for _, a := range actions {
-		actionList = append(actionList, map[string]interface{}{
-			"name":        a.Name,
-			"description": a.Description,
-			"params":      a.Params,
-		})
+	actionList := make([]actionJSON, 0, len(pluginMeta.Actions))
+	for _, a := range pluginMeta.Actions {
+		actionList = append(actionList, a)
 	}
 	return &Response{
 		Status:  "success",

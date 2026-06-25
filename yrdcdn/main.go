@@ -68,6 +68,7 @@ var pluginMeta = pluginMetaJSON{
 	Config: orderedParams{
 		{Key: "username", Label: "登录邮箱/手机"},
 		{Key: "password", Label: "密码"},
+		{Key: "id", Label: "域名ID"},
 	},
 	Actions: []actionJSON{
 		{
@@ -83,8 +84,6 @@ var pluginMeta = pluginMetaJSON{
 			Description: "部署SSL证书到融毅盾",
 			Params: orderedParams{
 				{Key: "id", Label: "域名ID"},
-				{Key: "fullchain", Label: "完整证书链"},
-				{Key: "privatekey", Label: "私钥"},
 			},
 		},
 	},

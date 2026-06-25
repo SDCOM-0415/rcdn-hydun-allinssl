@@ -50,14 +50,9 @@ jobs:
       with:
         tag: ${{ steps.read_version.outputs.VERSION }}
         name: ${{ steps.read_version.outputs.VERSION }}
-        body: |
-          Automated build release for yrdcdn plugin
-          
-          **Assets:**
-          - yrdcdn-linux-amd64 - Linux x86_64
-          - yrdcdn-windows-amd64.exe - Windows x86_64
         artifacts: |
           yrdcdn/yrdcdn-linux-amd64
           yrdcdn/yrdcdn-windows-amd64.exe
+        generateReleaseNotes: true
         skipIfReleaseExists: true
         token: ${{ secrets.GITHUB_TOKEN }}

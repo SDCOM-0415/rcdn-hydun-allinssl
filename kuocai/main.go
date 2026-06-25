@@ -84,7 +84,7 @@ var pluginMeta = pluginMetaJSON{
 			Name:        "upload",
 			Description: "部署SSL证书到括彩CDN平台",
 			Params: map[string]interface{}{
-				"domainId": "",
+				"domainId": "域名ID",
 			},
 		},
 	},

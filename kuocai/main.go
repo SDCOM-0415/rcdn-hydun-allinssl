@@ -13,9 +13,9 @@ type Request struct {
 }
 
 type Response struct {
-	Status  string                 `json:"status"`
-	Message string                 `json:"message"`
-	Result  map[string]interface{} `json:"result"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Result  interface{} `json:"result,omitempty"`
 }
 
 type ActionParam struct {
@@ -68,8 +68,7 @@ var pluginMeta = pluginMetaJSON{
 	Config: orderedParams{
 		{Key: "username", Label: "登录邮箱/手机"},
 		{Key: "password", Label: "密码"},
-		{Key: "domainId", Label: "域名ID"},
-		{Key: "baseUrl", Label: "平台地址，例如：https://rcdn.hydun.com"},
+		{Key: "baseUrl", Label: "平台地址"},
 	},
 	Actions: []actionJSON{
 		{
@@ -84,7 +83,9 @@ var pluginMeta = pluginMetaJSON{
 		{
 			Name:        "upload",
 			Description: "部署SSL证书到括彩CDN平台",
-			Params:      orderedParams{},
+			Params: orderedParams{
+				{Key: "domainId", Label: "域名ID"},
+			},
 		},
 	},
 }
@@ -104,13 +105,9 @@ func main() {
 
 	switch req.Action {
 	case "get_metadata":
-		outputJSON(&Response{Status: "success", Message: "插件信息", Result: mustMap(pluginMeta)})
+		outputJSON(&Response{Status: "success", Message: "插件信息", Result: pluginMeta})
 	case "list_actions":
-		actionList := make([]actionJSON, 0, len(pluginMeta.Actions))
-		for _, a := range pluginMeta.Actions {
-			actionList = append(actionList, a)
-		}
-		outputJSON(&Response{Status: "success", Message: "支持的动作", Result: map[string]interface{}{"actions": actionList}})
+		outputJSON(&Response{Status: "success", Message: "支持的动作", Result: map[string]interface{}{"actions": pluginMeta.Actions}})
 	case "check":
 		resp, err := check(req.Params)
 		if err != nil {
@@ -132,13 +129,6 @@ func main() {
 		})
 		return
 	}
-}
-
-func mustMap(v interface{}) map[string]interface{} {
-	data, _ := json.Marshal(v)
-	var m map[string]interface{}
-	json.Unmarshal(data, &m)
-	return m
 }
 
 func outputError(msg string, err error) {

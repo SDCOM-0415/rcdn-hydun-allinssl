@@ -118,7 +118,6 @@ func doRequest(params map[string]interface{}, path string, bodyParams map[string
 	requestURL := baseURL + path
 
 	var body []byte
-	var err error
 
 	body, err = json.Marshal(bodyParams)
 	if err != nil {

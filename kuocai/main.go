@@ -24,9 +24,9 @@ type ActionParam struct {
 }
 
 type actionJSON struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Params      orderedParams `json:"params,omitempty"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Params      interface{} `json:"params,omitempty"`
 }
 
 type orderedParams []ActionParam
@@ -83,8 +83,8 @@ var pluginMeta = pluginMetaJSON{
 		{
 			Name:        "upload",
 			Description: "部署SSL证书到括彩CDN平台",
-			Params: orderedParams{
-				{Key: "domainId", Label: "域名ID"},
+			Params: map[string]interface{}{
+				"domainId": "",
 			},
 		},
 	},

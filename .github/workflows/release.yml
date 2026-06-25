@@ -59,4 +59,5 @@ jobs:
         artifacts: |
           plugins/yrdcdn/yrdcdn-linux-amd64
           plugins/yrdcdn/yrdcdn-windows-amd64.exe
+        skipIfReleaseExists: true
         token: ${{ secrets.GITHUB_TOKEN }}

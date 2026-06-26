@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -47,11 +48,7 @@ func Upload(params map[string]interface{}) (*Response, error) {
 		return nil, errors.New("证书或私钥不能为空")
 	}
 
-	token, err := doRequest(params, "/login/loginUser", map[string]interface{}{
-		"userAccount": username,
-		"userPwd":     password,
-		"remember":    "true",
-	}, nil)
+	token, err := doLoginRequest(params, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +80,46 @@ func Upload(params map[string]interface{}) (*Response, error) {
 		Message: fmt.Sprintf("域名ID:%s 更新成功", domainId),
 		Result:  res.(map[string]interface{}),
 	}, nil
+}
+
+func doLoginRequest(params map[string]interface{}, username, password string) (interface{}, error) {
+	baseURL, err := getBaseURL(params)
+	if err != nil {
+		return nil, err
+	}
+	formData := url.Values{}
+	formData.Set("userAccount", username)
+	formData.Set("userPwd", password)
+	formData.Set("remember", "true")
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := client.Post(baseURL+"/login/loginUser", "application/x-www-form-urlencoded", strings.NewReader(formData.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %v", err)
+	}
+
+	var result checkResponse
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("解析响应失败: %v", err)
+	}
+
+	if result.Code == "SUCCESS" {
+		return result.Data, nil
+	} else if result.Message != "" {
+		return nil, errors.New(result.Message)
+	}
+	return nil, fmt.Errorf("请求失败(httpCode=%d)", resp.StatusCode)
 }
 
 func doRequest(params map[string]interface{}, path string, bodyParams map[string]interface{}, cookies *string) (interface{}, error) {

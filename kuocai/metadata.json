@@ -27,7 +27,14 @@
     {
       "name": "upload",
       "description": "部署SSL证书到括彩CDN平台",
-      "params": []
+      "params": [
+        {
+          "name": "domainId",
+          "type": "string",
+          "description": "域名ID",
+          "required": true
+        }
+      ]
     }
   ]
 }
